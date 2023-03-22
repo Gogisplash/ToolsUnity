@@ -10,17 +10,14 @@ public class EnemyScript : MonoBehaviour
     [SerializeField] private int currentIndex;
     [SerializeField] private bool isInReverse;
     [SerializeField] private Transform MeshHolder;
+    [SerializeField] private Light Elight;
     private GameObject Player;
 
-    [SerializeField] private float attackRadius;
-    [SerializeField] private float detectionRadius;
-    [SerializeField] private float damagesPower;
-    [SerializeField] private float castcooldown;
-    private float lastcast;
+    [SerializeField] private EnemyStats stats;
 
     public float AttackRadius
     {
-        get { return attackRadius; }
+        get { return stats.attackradius; }
     }
 
     void Start()
@@ -28,18 +25,18 @@ public class EnemyScript : MonoBehaviour
         Player = GameObject.FindGameObjectWithTag("Player");
 
         agent.SetDestination(path.GetSpotAt(currentIndex));
+        UpdateComponent();
     }
 
     void Update()
+
     {
-        
-        
         if (Vector3.Distance(transform.position, path.GetSpotAt(currentIndex)) < 2f)
         {
             if (isInReverse)
             {
                 currentIndex--;
-                if (currentIndex <0)
+                if (currentIndex < 0)
                 {
                     if (path.CanLoop)
                     {
@@ -55,7 +52,7 @@ public class EnemyScript : MonoBehaviour
             else
             {
                 currentIndex++;
-                if(currentIndex>= path.PathLenth)
+                if (currentIndex >= path.PathLenth)
                 {
                     if (path.CanLoop)
                     {
@@ -68,27 +65,34 @@ public class EnemyScript : MonoBehaviour
                     }
                 }
             }
-            
+
             agent.SetDestination(path.GetSpotAt(currentIndex));
         }
 
-
-        if (Player)
+        if (Player && Vector3.Distance(transform.position, Player.transform.position) < stats.attackradius)
         {
-            if (Vector3.Distance(transform.position, Player.transform.position) < detectionRadius)
-            {
-                agent.SetDestination(Player.transform.position);
-            }
-            else
-            {
-                agent.SetDestination(path.GetSpotAt(currentIndex));
-            }
-
-            if (lastcast + castcooldown <= Time.time && Vector3.Distance(transform.position, Player.transform.position) < attackRadius)
-            {
-                Player.GetComponent<Health>().ImpactHP(-damagesPower);
-                lastcast = Time.time;
-            }
+            Destroy(Player);
         }
+    }
+
+
+    public void UpdateComponent()
+    {
+
+        GetComponentInChildren<MeshRenderer>().material = stats.MeshColor;
+        MeshHolder.localScale = Vector3.one * stats.size;
+        agent.speed = stats.speed;
+        GetComponentInChildren<Light>().intensity = stats.lightIntensity;
+        GetComponentInChildren<Light>().color= stats.lightColor;
+
+
+
+    }
+
+    public void SwapStats(EnemyStats newStats)
+    {
+        stats = newStats;
+        UpdateComponent();
+
     }
 }
